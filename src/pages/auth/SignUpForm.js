@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import { Container, Card, Row, Col, Image, Form, Button } from 'react-bootstrap';
+import { useHistory, Link } from 'react-router-dom';
+
+import { Container, Card, Row, Col, Image, Form, Button, Alert } from 'react-bootstrap';
+import axios from 'axios';
+
 import styles from '../../styles/SignInUpForm.module.css';
 import btnStyles from '../../styles/Button.module.css';
 import logo from '../../assets/logo.png';
 import signUphero from '../../assets/signUphero.jpg';
+
 
 function SignUpForm() {
   const [signUpData, setSignUpData] = useState({
@@ -13,11 +18,25 @@ function SignUpForm() {
   });
   const { username, password1, password2 } = signUpData;
 
+  const [errors, setErrors] = useState({});
+
+  const history = useHistory();
+
   const handleChange = (event) => {
     setSignUpData({
       ...signUpData,
       [event.target.name]: event.target.value,
     });
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      await axios.post("/dj-rest-auth/registration/", signUpData);
+      history.push("/signin");
+    } catch (err) {
+      setErrors(err.response?.data);
+    }
   };
 
   return (
@@ -38,7 +57,7 @@ function SignUpForm() {
                 Create a new account
               </h5>
 
-              <Form>
+              <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-4" controlId="username">
                   <Form.Control
                     className={styles.Input}
@@ -50,6 +69,9 @@ function SignUpForm() {
                     onChange={handleChange}
                   />
                 </Form.Group>
+                {errors.username?.map((message, idx) => 
+                  <Alert variant='warning' key={idx}>{message}</Alert>
+                )}
 
                 <Form.Group className="mb-4" controlId="password1">
                   <Form.Control
@@ -62,6 +84,11 @@ function SignUpForm() {
                     onChange={handleChange}
                   />
                 </Form.Group>
+                {errors.password1?.map((message, idx) => (
+                  <Alert key={idx} variant="warning">
+                    {message}
+                  </Alert>
+                ))}
 
                 <Form.Group className="mb-4" controlId="password2">
                   <Form.Control
@@ -74,20 +101,34 @@ function SignUpForm() {
                     onChange={handleChange}
                   />
                 </Form.Group>
+                {errors.password2?.map((message, idx) => (
+                  <Alert key={idx} variant="warning">
+                    {message}
+                  </Alert>
+                ))}
 
-                <Button className={`${btnStyles.Wide} mb-4 px-5`} variant="dark" size="lg">
+                <Button 
+                  className={`${btnStyles.Wide} mb-4 px-5`} 
+                  variant="dark" 
+                  size="lg"
+                  type='submit'
+                >
                   Register
                 </Button>
+                {errors.non_field_errors?.map((message, idx) => (
+                  <Alert key={idx} variant="warning" className="mt-3">
+                    {message}
+                  </Alert>
+                ))}
               </Form>
 
               <a className="small text-muted" href="#!">
                 Forgot password?
               </a>
-              <p className="mb-5 pb-lg-2" style={{ color: '#393f81' }}>
-                Already have an account?{' '}
-                <a href="#!" style={{ color: '#393f81' }}>
-                  Sign in
-                </a>
+              <p className="mb-5 pb-lg-2">
+                <Link className={styles.Link} to="/signin">
+                  Already have an account? <span>Sign in</span>
+                </Link>
               </p>
 
               <div className="d-flex flex-row justify-content-start">
