@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Form, Button, Container, Row, Col, Image } from 'react-bootstrap';
 import Upload from "../../assets/upload.png";
 // import styles from "../../styles/PostCreateEditForm.module.css";
 import appStyles from "../../App.module.css";
 import btnStyles from "../../styles/Button.module.css";
 import Asset from "../../components/Asset"
+import { useHistory } from 'react-router-dom';
+import axios from 'axios';
+import { axiosReq } from "../../api/axiosDefaults";
+
+
 
 const CreateArticleForm = () => {
+  const [errors, setErrors] = useState({});
+  
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -18,6 +25,9 @@ const CreateArticleForm = () => {
   });
 
   const {title, content, location, budget, tripDuration, place, image} = formData;
+
+  const imageInput = useRef(null);
+  const history = useHistory();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,10 +44,29 @@ const CreateArticleForm = () => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Submit the form data to the server
-    console.log('Form data:', formData);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const formData = new FormData();
+
+    formData.append("title", title);
+    formData.append("content", content);
+    formData.append("location", location);
+    formData.append("budget", budget);
+    formData.append("tripDuration", tripDuration);
+    formData.append("place", place);
+    formData.append("image", imageInput.current.files[0]);
+
+    try {
+      const { data } = await axiosReq.post("/posts/", formData);
+      history.push(`/posts/${data.id}`);
+    } catch (err) {
+      console.log(err);
+      if (err.response?.status !== 401) {
+        
+        setErrors(err.response?.data);
+      }
+    }
   };
 
   return (
@@ -147,6 +176,7 @@ const CreateArticleForm = () => {
                 id="image-upload"
                 accept="image/*"
                 onChange={handleImageChange}
+                ref={imageInput}
               />
             </Form.Group>
             </Container>
@@ -154,9 +184,15 @@ const CreateArticleForm = () => {
         </Row>
   
       <Row className="justify-content-center">
-        <Col md={4} className="text-center">
-          <Button variant="primary" type="submit">
+        <Col  className="text-center">
+          <Button className={`${btnStyles.Button} ${btnStyles.Blue} `} type="submit">
             Submit
+          </Button>
+          <Button
+            className={`${btnStyles.Button} ${btnStyles.Blue}`}
+            onClick={() => {}}
+          >
+            Cancel
           </Button>
         </Col>
       </Row>
